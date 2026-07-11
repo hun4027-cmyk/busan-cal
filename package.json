@@ -1,0 +1,20 @@
+{
+  "name": "busan-cal",
+  "version": "0.1.0",
+  "private": true,
+  "description": "부산 캘린더 - 데이터 파이프라인 스켈레톤 (축제·전시/공연·정기이벤트·날씨 통합)",
+  "type": "module",
+  "engines": {
+    "node": ">=22.6"
+  },
+  "scripts": {
+    "start": "node --experimental-strip-types src/server.ts",
+    "demo": "node --experimental-strip-types src/index.ts",
+    "serve": "node --experimental-strip-types src/server.ts",
+    "typecheck": "tsc --noEmit -p ."
+  },
+  "devDependencies": {
+    "@types/node": "^20.19.43",
+    "typescript": "^5.5.4"
+  }
+}

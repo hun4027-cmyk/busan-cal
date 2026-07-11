@@ -1,0 +1,44 @@
+[
+  {
+    "id": "drone-gwangalli",
+    "title": "광안리 M 드론라이트쇼",
+    "category": "드론쇼",
+    "place": "광안리해변",
+    "lat": 35.1532, "lng": 129.1187,
+    "outdoor": true,
+    "timeText": "20:00",
+    "link": "https://www.gwangallimdrone.co.kr/",
+    "recurrence": { "type": "weekly", "weekday": 6 },
+    "season": { "start": "2026-03-01", "end": "2026-12-31" },
+    "_verified": true,
+    "_note": "매주 토요일 20시, 광안리해변 어디서나 관람. 무료."
+  },
+  {
+    "id": "marketnight-millac",
+    "title": "밀락더마켓 마켓나이트",
+    "category": "마켓",
+    "place": "밀락더마켓 (민락수변공원 옆)",
+    "lat": 35.1533, "lng": 129.1289,
+    "outdoor": true,
+    "timeText": "19:00~ (평일 02시·금토 03시)",
+    "link": "https://www.instagram.com/millac_the_market/",
+    "recurrence": { "type": "daily" },
+    "season": { "start": "2026-06-01", "end": "2026-08-31" },
+    "_verified": true,
+    "_note": "리뉴얼된 야시장. 매일 야간 운영(평일 19:00~02:00, 금·토 19:00~03:00). 정확한 운영일은 공식 SNS 확인 권장."
+  },
+  {
+    "id": "fleamarket-f1963",
+    "title": "F1963 망미장 (플리마켓)",
+    "category": "마켓",
+    "place": "F1963",
+    "lat": 35.1959, "lng": 129.0855,
+    "outdoor": true,
+    "timeText": "11:00~18:00",
+    "link": "https://www.f1963.org/ko/",
+    "recurrence": { "type": "dateList", "dates": [] },
+    "season": { "start": "2026-05-01", "end": "2026-10-31" },
+    "_verified": false,
+    "_note": "비정기·시즌성(과거 예: 금·토 11~18시). 고정 요일 없음 → 공식 공지(f1963.org)에서 확정 날짜를 dates 배열에 채울 것."
+  }
+]

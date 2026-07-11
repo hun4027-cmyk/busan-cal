@@ -1,0 +1,12 @@
+# Render 블루프린트 — busan-cal 백엔드. repo 연결 시 이 설정을 자동 인식.
+# (Dashboard → New → Blueprint → repo 선택 → DATA_GO_KR_KEY 값만 입력)
+services:
+  - type: web
+    name: busan-cal-api
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    plan: starter   # 유료(항상 켜짐·슬립 없음). 심사 후 무료로 내리려면 free로.
+    healthCheckPath: /
+    envVars:
+      - key: DATA_GO_KR_KEY
+        sync: false   # 민감값 → 대시보드에서 직접 입력
