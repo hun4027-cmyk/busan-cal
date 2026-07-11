@@ -37,8 +37,10 @@ export async function getTripPlan(
 
   return dateRange(tripStart, tripEnd).map((date): DayPlan => {
     const dayWeather = weather[date] ?? null;
+    const seenIds = new Set<string>();  // 하루 안에서 id 중복제거(안전망)
     const events = all
       .filter((ev) => activeOn(ev, date))
+      .filter((ev) => (seenIds.has(ev.id) ? false : (seenIds.add(ev.id), true)))
       // 해수욕장은 그날 날씨로 물놀이 배지를 계산해 날짜별 항목으로 복제
       .map((ev): EventItem =>
         ev.source === "beach"

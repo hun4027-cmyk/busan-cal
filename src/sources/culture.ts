@@ -37,6 +37,7 @@ export async function fetchCulture(
 ): Promise<EventItem[]> {
   const key = requireKey();
   const collected: Record<string, string>[] = [];
+  const seen = new Set<string>();   // seq 중복제거
 
   for (let page = 1; page <= 10; page++) {
     const qs = new URLSearchParams({
@@ -48,8 +49,14 @@ export async function fetchCulture(
     const xml = await fetchText(`${BASE}?${qs}`);
     const total = Number(/<totalCount>(\d+)<\/totalCount>/.exec(xml)?.[1] ?? 0);
     const items = parseItems(xml);
-    collected.push(...items);
-    if (collected.length >= total || items.length === 0) break;
+
+    let added = 0;
+    for (const it of items) {
+      const seq = it.seq ?? "";
+      if (seq && !seen.has(seq)) { seen.add(seq); collected.push(it); added++; }
+    }
+    // 응답이 비었거나, pageNo가 무시돼 새 항목이 없거나, 다 모았으면 중단(중복 방지)
+    if (items.length === 0 || added === 0 || collected.length >= total) break;
   }
 
   return collected
