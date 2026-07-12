@@ -44,7 +44,7 @@ export async function fetchCulture(
       serviceKey: key,
       from: tripStart.replace(/-/g, ""),
       to: tripEnd.replace(/-/g, ""),
-      numOfRows: "100", pageNo: String(page),
+      rows: "100", cPage: String(page),   // ✅ 이 API의 페이징 파라미터 (numOfRows/pageNo 아님)
     });
     const xml = await fetchText(`${BASE}?${qs}`);
     const total = Number(/<totalCount>(\d+)<\/totalCount>/.exec(xml)?.[1] ?? 0);
