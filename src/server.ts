@@ -6,7 +6,6 @@ import { uvUrl, parseUv } from "./sources/uv.ts";
 
 const PORT = Number(process.env.PORT ?? 3000);
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
-const TIDE_BASE = "https://apis.data.go.kr/1192136/tideFcstHghLw";
 
 async function rawFetch(target: string) {
   const r = await fetch(target, { headers: { "User-Agent": "busan-cal/0.1" } });
@@ -39,11 +38,12 @@ const server = createServer(async (req, res) => {
   }
   if (url.pathname === "/debug/tide") {
     try {
-      const qs = new URLSearchParams(url.search);   // 내가 붙이는 파라미터 그대로 전달
+      const qs = new URLSearchParams(url.search);
+      const p = qs.get("_p") ?? "1192136/tideFcstHghLw"; qs.delete("_p");
       qs.set("serviceKey", requireKey());
-      const { status, body } = await rawFetch(`${TIDE_BASE}?${qs}`);
+      const { status, body } = await rawFetch(`https://apis.data.go.kr/${p}?${qs}`);
       const sent = Object.fromEntries([...qs].filter(([k]) => k !== "serviceKey"));
-      return json({ status, sent, bodySnippet: body.slice(0, 900) });
+      return json({ status, path: p, sent, bodySnippet: body.slice(0, 900) });
     } catch (e) { return json({ error: (e as Error).message }); }
   }
 
