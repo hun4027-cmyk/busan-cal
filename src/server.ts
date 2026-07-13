@@ -1,10 +1,16 @@
-// HTTP 엔드포인트 — 미니앱이 부르는 단일 백엔드.
 import { createServer } from "node:http";
 import { getTripPlan } from "./handler.ts";
-import { fetchAirRaw, parseAir } from "./sources/air.ts";
+import { requireKey } from "./config.ts";
+import { airUrl, parseAir } from "./sources/air.ts";
+import { uvUrl, parseUv } from "./sources/uv.ts";
 
 const PORT = Number(process.env.PORT ?? 3000);
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
+
+async function rawFetch(target: string) {
+  const r = await fetch(target, { headers: { "User-Agent": "busan-cal/0.1" } });
+  return { status: r.status, body: await r.text() };
+}
 
 const server = createServer(async (req, res) => {
   const cors = {
@@ -13,49 +19,41 @@ const server = createServer(async (req, res) => {
     "Content-Type": "application/json; charset=utf-8",
   };
   if (req.method === "OPTIONS") { res.writeHead(204, cors); return res.end(); }
-
   const url = new URL(req.url ?? "/", `http://localhost:${PORT}`);
+  const json = (o: unknown) => { res.writeHead(200, cors); res.end(JSON.stringify(o, null, 2)); };
 
-  if (url.pathname === "/") {
-    res.writeHead(200, cors);
-    return res.end(JSON.stringify({ ok: true, service: "busan-cal" }));
-  }
+  if (url.pathname === "/") return json({ ok: true, service: "busan-cal" });
 
   if (url.pathname === "/debug/air") {
+    try { const { status, body } = await rawFetch(airUrl());
+      let parsed: unknown = null; try { parsed = parseAir(JSON.parse(body)); } catch {}
+      return json({ status, parsed, bodySnippet: body.slice(0, 500) });
+    } catch (e) { return json({ error: (e as Error).message }); }
+  }
+  if (url.pathname === "/debug/uv") {
+    try { const { status, body } = await rawFetch(uvUrl());
+      let parsed: unknown = null; try { parsed = parseUv(JSON.parse(body)); } catch {}
+      return json({ status, parsed, bodySnippet: body.slice(0, 700) });
+    } catch (e) { return json({ error: (e as Error).message }); }
+  }
+  if (url.pathname === "/debug/tide") {
     try {
-      const raw: any = await fetchAirRaw();
-      res.writeHead(200, cors);
-      return res.end(JSON.stringify({
-        header: raw?.response?.header ?? null,
-        count: raw?.response?.body?.items?.length ?? 0,
-        sample: raw?.response?.body?.items?.[0] ?? null,
-        parsed: parseAir(raw),
-      }, null, 2));
-    } catch (e) {
-      res.writeHead(200, cors);
-      return res.end(JSON.stringify({ error: (e as Error).message }));
-    }
+      const key = requireKey();
+      const today = new Date(Date.now() + 9 * 3600 * 1000).toISOString().slice(0, 10).replace(/-/g, "");
+      const obs = url.searchParams.get("obs") ?? "DT_0063";
+      const target = `http://www.khoa.go.kr/api/oceangrid/tideObsPreTab/search.do?ServiceKey=${encodeURIComponent(key)}&ObsCode=${obs}&Date=${today}&ResultType=json`;
+      const { status, body } = await rawFetch(target);
+      return json({ status, obs, bodySnippet: body.slice(0, 800) });
+    } catch (e) { return json({ error: (e as Error).message }); }
   }
 
   if (url.pathname === "/trip") {
     const start = url.searchParams.get("start") ?? "";
     const end = url.searchParams.get("end") ?? "";
-    if (!DATE_RE.test(start) || !DATE_RE.test(end)) {
-      res.writeHead(400, cors);
-      return res.end(JSON.stringify({ error: "start/end는 YYYY-MM-DD 형식이어야 합니다." }));
-    }
-    if (start > end) {
-      res.writeHead(400, cors);
-      return res.end(JSON.stringify({ error: "start가 end보다 늦을 수 없습니다." }));
-    }
-    try {
-      const plan = await getTripPlan(start, end);
-      res.writeHead(200, cors);
-      return res.end(JSON.stringify(plan));
-    } catch (e) {
-      res.writeHead(500, cors);
-      return res.end(JSON.stringify({ error: (e as Error).message }));
-    }
+    if (!DATE_RE.test(start) || !DATE_RE.test(end)) { res.writeHead(400, cors); return res.end(JSON.stringify({ error: "start/end는 YYYY-MM-DD 형식이어야 합니다." })); }
+    if (start > end) { res.writeHead(400, cors); return res.end(JSON.stringify({ error: "start가 end보다 늦을 수 없습니다." })); }
+    try { const plan = await getTripPlan(start, end); res.writeHead(200, cors); return res.end(JSON.stringify(plan)); }
+    catch (e) { res.writeHead(500, cors); return res.end(JSON.stringify({ error: (e as Error).message })); }
   }
 
   res.writeHead(404, cors);
