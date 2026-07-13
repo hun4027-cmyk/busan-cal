@@ -1,10 +1,7 @@
 // HTTP 엔드포인트 — 미니앱이 부르는 단일 백엔드.
-//   GET /trip?start=YYYY-MM-DD&end=YYYY-MM-DD → DayPlan[] (JSON)
-//   GET /            → 헬스체크
-// 무설치(Node 내장 http). 서버리스(Vercel/Cloudflare)로 옮길 땐 handleTrip만 재사용하면 됨.
-
 import { createServer } from "node:http";
 import { getTripPlan } from "./handler.ts";
+import { fetchAirRaw, parseAir } from "./sources/air.ts";
 
 const PORT = Number(process.env.PORT ?? 3000);
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
@@ -22,6 +19,22 @@ const server = createServer(async (req, res) => {
   if (url.pathname === "/") {
     res.writeHead(200, cors);
     return res.end(JSON.stringify({ ok: true, service: "busan-cal" }));
+  }
+
+  if (url.pathname === "/debug/air") {
+    try {
+      const raw: any = await fetchAirRaw();
+      res.writeHead(200, cors);
+      return res.end(JSON.stringify({
+        header: raw?.response?.header ?? null,
+        count: raw?.response?.body?.items?.length ?? 0,
+        sample: raw?.response?.body?.items?.[0] ?? null,
+        parsed: parseAir(raw),
+      }, null, 2));
+    } catch (e) {
+      res.writeHead(200, cors);
+      return res.end(JSON.stringify({ error: (e as Error).message }));
+    }
   }
 
   if (url.pathname === "/trip") {
@@ -49,4 +62,4 @@ const server = createServer(async (req, res) => {
   res.end(JSON.stringify({ error: "not found" }));
 });
 
-server.listen(PORT, () => console.log(`▶ busan-cal API http://localhost:${PORT}  (GET /trip?start=&end=)`));
+server.listen(PORT, () => console.log(`▶ busan-cal API http://localhost:${PORT}`));
